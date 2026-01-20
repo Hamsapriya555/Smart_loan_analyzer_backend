@@ -36,71 +36,86 @@ exports.register = async (req, res) => {
       password 
     });
     
-    console.log('User created successfully:', user._id);
+    console.log('✓ User created successfully:', user._id);
     
     // Generate token
     const token = sign(user);
-    console.log('Token generated:', token ? 'Success' : 'Failed');
+    console.log('Token generated:', token ? '✓ Success' : '❌ Failed');
     
     if (!token) {
       return res.status(500).json({ success: false, message: 'Failed to generate token' });
     }
     
-    res.status(201).json({ 
+    const responseData = {
       success: true, 
       data: { 
         token, 
         user: { 
-          id: user._id, 
+          id: user._id.toString(), 
           name: user.name, 
           email: user.email 
         } 
       } 
-    });
+    };
+    
+    console.log('✓ Sending register response:', JSON.stringify(responseData, null, 2));
+    res.status(201).json(responseData);
   } catch (e) {
-    console.error('Registration error:', e);
+    console.error('❌ Registration error:', e);
     res.status(500).json({ success: false, message: e.message });
   }
 };
 
 exports.login = async (req, res) => {
   try {
+    console.log('🔵 Login attempt with:', req.body.email);
+    
     const { email, password } = req.body;
     
     if (!email || !password) {
+      console.log('❌ Missing email or password');
       return res.status(400).json({ success: false, message: 'email and password required' });
     }
     
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
+      console.log('❌ User not found:', email);
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
+    console.log('✓ User found, checking password...');
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      console.log('❌ Password mismatch');
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
+    console.log('✓ Password correct, generating token...');
     const token = sign(user);
-    console.log('Login - Token generated:', token ? 'Success' : 'Failed');
+    console.log('Token generated:', token ? '✓ Success' : '❌ Failed');
     
     if (!token) {
+      console.log('❌ Token generation failed');
       return res.status(500).json({ success: false, message: 'Failed to generate token' });
     }
     
-    res.json({ 
+    const responseData = { 
       success: true, 
       data: { 
         token, 
         user: { 
-          id: user._id, 
+          id: user._id.toString(), 
           name: user.name, 
           email: user.email 
         } 
       } 
-    });
+    };
+    
+    console.log('✓ Sending login response:', JSON.stringify(responseData, null, 2));
+    res.status(200).json(responseData);
+    console.log('✓ Response sent successfully');
   } catch (e) {
-    console.error('Login error:', e);
+    console.error('❌ Login error:', e);
     res.status(500).json({ success: false, message: e.message });
   }
 };
